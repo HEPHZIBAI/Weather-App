@@ -1,0 +1,171 @@
+{/* <video
+        style={{
+          paddingTop: "500px",
+          position: "fixed",
+          top: "50%",
+          left: "50%",
+          transform: "translate(-50%, -50%)",
+          minWidth: "100%",
+          minHeight: "100%",
+          zIndex: -1,
+          objectFit: "cover",
+        }}
+        src={Weathervideo}
+        autoPlay
+        loop
+        muted
+      /> */}
+
+
+
+
+
+
+
+
+
+      import './App.css';
+import { useState } from 'react';
+import { Line } from 'react-chartjs-2';
+import 'chart.js/auto';
+import Theam from './components/Theam'; 
+import Button from '@mui/material/Button';
+import Header from './components/Header';
+
+const App = () => {
+  const api = {
+    key: "22d8fb28a04d7cbfbd894c571496c142",
+    base: "https://api.openweathermap.org/data/2.5/",
+  };
+
+  const [search, setSearch] = useState("");
+  const [weather, setWeather] = useState(null);
+  const [forecast, setForecast] = useState(null);
+  const [error, setError] = useState("");
+  
+
+  const handleSearch = async () => {
+    
+    setError("");
+    try {
+      const weatherResponse = await fetch(`${api.base}weather?q=${search}&units=metric&APPID=${api.key}`);
+      if (!weatherResponse.ok) throw new Error("Failed to fetch weather data.");
+      const weatherData = await weatherResponse.json();
+      setWeather(weatherData);
+      console.log(weatherData)
+      
+      const forecastResponse = await fetch(`${api.base}forecast?lat=${weatherData.coord.lat}&lon=${weatherData.coord.lon}&appid=${api.key}&units=metric`);
+      if (!forecastResponse.ok) throw new Error("Failed to fetch forecast data.");
+      const forecastData = await forecastResponse.json();
+      setForecast(forecastData.list);
+
+      setSearch("");
+      
+    } catch (err) {
+      setError("An error occurred while fetching the weather data.");
+      console.error(err);
+    }
+  };
+
+  const chartData = {
+    labels: forecast ? forecast.slice(0, 7).map((day, index) => `Day ${index + 1}`) : [],
+    datasets: [
+      {
+        label: 'Temperature (°C)',
+        data: forecast ? forecast.slice(0, 7).map(day => day.main.temp) : [],
+        borderColor: 'rgba(75,192,192,1)',
+        backgroundColor: 'rgba(75,192,192,0.2)',
+        fill: true,
+      }
+    ]
+  };
+
+  return (
+    <div>
+      <Header/>
+      <Theam/>
+      <div>
+        <input
+          type="text"
+          placeholder='Enter City/Town...'
+          onChange={(e) => setSearch(e.target.value)}
+        />
+        {search.length>2?<Button varient="contained" onClick={handleSearch}>Search</Button>:<Button variant='contained' disabled>Search </Button>}
+        
+      </div>
+
+
+      {error && <p>{error}</p>}
+
+      {weather && (
+        <div>
+          <p>{weather.name}</p>
+          <p>Humidity : {weather.main.humidity}</p>
+          <p>Wind Speed : {weather.wind.speed}</p>
+          <p>{weather.main.temp}°C</p>
+          <p>{weather.weather[0].main}</p>
+          <p>({weather.weather[0].description})</p>
+        </div>
+      )}
+      {forecast && (
+        <div>
+          <h2>7-Day Forecast</h2>
+          {forecast.slice(0, 7).map((day, index) => (
+            <div key={index}>
+              <p>Day {index + 1}</p>
+              <p>Temp: {day.main.temp}°C</p>
+              <p>Humidity : {day.main.humidity}</p>
+              <p>Wind Speed : {day.wind.speed}</p>
+              <p>{day.weather[0].main}</p>
+              <p>({day.weather[0].description})</p>
+            </div>
+            ))
+          }
+          <div style={{ width: '600px', height: '400px' }}>
+          <Line data={chartData} />
+      </div>
+        </div>
+      )}
+
+    </div>
+  );};
+
+export default App;
+
+
+
+
+
+<Container>
+{error && (<Box>{error}</Box>)}
+{weather && (
+    <Box flex={1}>
+      <Typography>{weather.name}</Typography>
+      <Typography>Humidity: {weather.main.humidity}%</Typography>
+      <Typography>Wind Speed: {weather.wind.speed} m/s</Typography>
+      <Typography>{weather.main.temp}°C</Typography>
+      <Typography>{weather.weather[0].main}</Typography>
+      <Typography>({weather.weather[0].description})</Typography>
+    </Box>
+  )}
+{forecast && (
+      <Stack spacing={2}>
+        <Typography variant="h2">7-Day Forecast</Typography>
+        {forecast.slice(0, 7).map((day, index) => (
+          <Box key={index}>
+            <Typography>Day {index + 1}</Typography>
+            <Typography>Temp: {day.main.temp}°C</Typography>
+            <Typography>Humidity: {day.main.humidity}%</Typography>
+            <Typography>Wind Speed: {day.wind.speed} m/s</Typography>
+            <Typography>{day.weather[0].main}</Typography>
+            <Typography>({day.weather[0].description})</Typography>
+          </Box>
+        ))}
+        <Box sx={{ width: '600px', height: '400px' }}>
+          <Line data={chartData} />
+          {console.log(chartData)}
+        </Box>
+      </Stack>
+    )}
+
+</Container>
